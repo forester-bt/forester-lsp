@@ -1,0 +1,9 @@
+{
+    "clients": {
+        "forester-lsp": {
+            "enabled": true,
+            "command": ["forester-lsp"],
+            "selector": "source.forester"
+        }
+    }
+}

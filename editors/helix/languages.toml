@@ -1,0 +1,12 @@
+
+# Forester behavior-tree language (added by forester-lsp)
+[language-server.forester-lsp]
+command = "forester-lsp"
+
+[[language]]
+name = "forester"
+scope = "source.forester"
+file-types = ["tree"]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+language-servers = ["forester-lsp"]

@@ -1,0 +1,49 @@
+{
+  "name": "forester-lsp-client",
+  "displayName": "Forester Tree Language",
+  "description": "Language client for the Forester behavior tree LSP server",
+  "version": "0.0.1",
+  "publisher": "besok",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/besok/forester-lsp"
+  },
+  "scripts": {
+    "package": "npx --yes @vscode/vsce package --skip-license"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "forester",
+        "aliases": [
+          "Forester Tree"
+        ],
+        "extensions": [
+          ".tree"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "configuration": {
+      "title": "Forester LSP",
+      "properties": {
+        "forester.server.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the forester-lsp launcher script or jar. When empty, the extension uses the repository's build output (build/install/forester-lsp/bin), which is what you want during development."
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}

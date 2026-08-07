@@ -11,6 +11,8 @@ import java.util.concurrent.Executors;
 import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
@@ -37,6 +39,11 @@ public class ForesterLanguageServer implements LanguageServer, LanguageClientAwa
 
         capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
         capabilities.setCompletionProvider(new CompletionOptions(true, List.of()));
+
+        var legend = new SemanticTokensLegend(
+                SemanticTokenizer.TOKEN_TYPES, SemanticTokenizer.TOKEN_MODIFIERS);
+        capabilities.setSemanticTokensProvider(
+                new SemanticTokensWithRegistrationOptions(legend, true));
 
         result.setCapabilities(capabilities);
         return CompletableFuture.completedFuture(result);

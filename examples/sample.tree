@@ -1,0 +1,15 @@
+import "std::actions"
+
+// A simple patrol behavior
+root patrol sequence {
+    check_battery(threshold = 20.5)
+    /* visit every waypoint,
+       then report home */
+    r_fallback {
+        move_to(target = {"x": 1, "y": 2})
+        recover(attempts = 3, verbose = TRUE)
+    }
+    report(msg = "done")
+}
+
+impl wait(duration: num);

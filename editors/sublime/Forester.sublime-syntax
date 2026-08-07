@@ -1,0 +1,31 @@
+%YAML 1.2
+---
+# Minimal syntax for Forester behavior trees. Its main job is to claim the
+# `source.forester` scope for .tree files so the LSP package attaches the
+# server; the regex rules below double as fallback highlighting.
+name: Forester
+file_extensions:
+  - tree
+scope: source.forester
+
+contexts:
+  main:
+    - match: '//.*$'
+      scope: comment.line.double-slash.forester
+    - match: '/\*'
+      push:
+        - meta_scope: comment.block.forester
+        - match: '\*/'
+          pop: true
+    - match: '"(\\.|[^"\\])*"'
+      scope: string.quoted.double.forester
+    - match: '\b(root|parallel|sequence|m_sequence|r_sequence|fallback|r_fallback|import)\b'
+      scope: keyword.control.forester
+    - match: '\b(TRUE|FALSE)\b'
+      scope: constant.language.forester
+    - match: '\b(num|array|object|string|bool|tree|any)\b'
+      scope: storage.type.forester
+    - match: '-?\d+(\.\d+)?([Ee][+-]?\d+)?'
+      scope: constant.numeric.forester
+    - match: '=>|=|\.\.'
+      scope: keyword.operator.forester

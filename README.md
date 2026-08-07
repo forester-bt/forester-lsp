@@ -26,9 +26,26 @@ Socket mode:
 .\gradlew.bat run --args="--socket --port 5007"
 ```
 
+## Editor integrations
+
+See [`editors/`](editors/README.md):
+
+- **VS Code** — [`editors/vscode`](editors/vscode/README.md): one-command
+  `.vsix` install, or `F5` from this repo for development.
+- **Neovim** — [`editors/neovim`](editors/neovim/README.md): single-file
+  plugin, copy one lua file into `~/.config/nvim/plugin/`.
+- **Helix** — [`editors/helix`](editors/helix/README.md): `./install.sh`.
+- **Emacs** — [`editors/emacs`](editors/emacs/README.md): single-file
+  eglot integration.
+- **Sublime Text** — [`editors/sublime`](editors/sublime/README.md):
+  `./install.sh`.
+- **JetBrains** — covered by an independent plugin (see
+  [`editors/README.md`](editors/README.md)).
+
 ## Features
 
 - Full-text document synchronization
+- Syntax highlighting via LSP semantic tokens (`textDocument/semanticTokens/full`)
 - Completion provider (stub)
 - ANTLR4-based parsing for `.tree` files
 

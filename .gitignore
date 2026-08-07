@@ -3,4 +3,7 @@
 .qodana
 build
 **/gen/**
+node_modules
+editors/vscode/package-lock.json
+*.vsix
 .idea/
