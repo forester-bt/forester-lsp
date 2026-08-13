@@ -15,7 +15,7 @@ completion, comment toggling, and bracket matching.
 From this folder:
 
 ```bash
-npm install && npm run package && code --install-extension forester-lsp-client-0.0.1.vsix
+npm install && npm run package && 
 ```
 
 This builds a `.vsix` and installs it into your regular VS Code.

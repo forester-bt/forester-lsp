@@ -13,17 +13,24 @@ function resolveServerCommand(context) {
     // Dev default: the extension lives in editors/vscode inside the repo, so the
     // launcher produced by `./gradlew installDist` is two levels up.
     const script = process.platform === 'win32' ? 'forester-lsp.bat' : 'forester-lsp';
-    return context.asAbsolutePath(
+    const devPath = context.asAbsolutePath(
         path.join('..', '..', 'build', 'install', 'forester-lsp', 'bin', script));
+    if (fs.existsSync(devPath)) {
+        return devPath;
+    }
+    // Installed from a .vsix: fall back to a `forester-lsp` on PATH.
+    return script;
 }
 
 function activate(context) {
     const command = resolveServerCommand(context);
 
-    if (!command.endsWith('.jar') && !fs.existsSync(command)) {
+    const isPath = command.includes('/') || command.includes('\\');
+    if (!command.endsWith('.jar') && isPath && !fs.existsSync(command)) {
         window.showErrorMessage(
             `Forester LSP launcher not found at ${command}. ` +
-            'Run "./gradlew installDist" in the repository, or set "forester.server.path".');
+            'Run "./gradlew installDist" in the repository, put forester-lsp on PATH, ' +
+            'or set "forester.server.path".');
         return;
     }
 

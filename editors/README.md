@@ -11,7 +11,6 @@ Build the launcher first:
 | --- | --- | --- |
 | VS Code | [`vscode/`](vscode/README.md) | one command (`.vsix`), or `F5` for development |
 | Neovim | [`neovim/`](neovim/README.md) | copy one lua file into `~/.config/nvim/plugin/` |
-| Helix | [`helix/`](helix/README.md) | `./install.sh` (appends to `languages.toml`) |
 | Emacs | [`emacs/`](emacs/README.md) | copy one elisp file, one `load` line (eglot) |
 | Sublime Text | [`sublime/`](sublime/README.md) | `./install.sh` (syntax + LSP client settings) |
 
@@ -23,8 +22,8 @@ Everything works on Windows with two adjustments:
   alongside the Unix script). Wherever a config references `forester-lsp`,
   Windows users should use the full path to the `.bat` — Windows does not
   resolve extension-less commands to batch files.
-- The `install.sh` scripts (Helix, Sublime) are bash-only. On Windows, copy
-  the config files manually; each editor README states the target path.
+- The `install.sh` script (Sublime) is bash-only. On Windows, copy
+  the config files manually; the README states the target path.
 
 The VS Code extension handles Windows automatically (it picks the `.bat` and
 spawns it through a shell). `.vsix` packaging and `F5` development work the

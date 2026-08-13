@@ -4,12 +4,13 @@ Language Server Protocol server for the [Forester](https://github.com/besok/fore
 
 ## Requirements
 
-- Java 17+
+- Java 21+ (the Gradle toolchain is pinned to 21; see
+  [`build.gradle.kts`](build.gradle.kts))
 
 ## Build
 
 ```bash
-.\gradlew.bat build
+./gradlew build
 ```
 
 ## Run
@@ -17,13 +18,37 @@ Language Server Protocol server for the [Forester](https://github.com/besok/fore
 Stdio mode (for editor integration):
 
 ```bash
-.\gradlew.bat run
+./gradlew run
 ```
 
 Socket mode:
 
 ```bash
-.\gradlew.bat run --args="--socket --port 5007"
+./gradlew run --args="--socket --port 5007"
+```
+
+On Windows use `gradlew.bat` instead of `./gradlew`.
+
+## Install
+
+Build the distributable launcher:
+
+```bash
+./gradlew installDist   # -> build/install/forester-lsp/bin/forester-lsp
+```
+
+The `forester-lsp` command must be on `PATH` for editor integration. Either add
+the bin directory to `PATH`:
+
+```bash
+export PATH="$PATH:$(pwd)/build/install/forester-lsp/bin"
+```
+
+or symlink the launcher into a directory already on `PATH` (e.g.
+`~/.local/bin`):
+
+```bash
+ln -sf "$(pwd)/build/install/forester-lsp/bin/forester-lsp" ~/.local/bin/forester-lsp
 ```
 
 ## Editor integrations
@@ -34,7 +59,6 @@ See [`editors/`](editors/README.md):
   `.vsix` install, or `F5` from this repo for development.
 - **Neovim** — [`editors/neovim`](editors/neovim/README.md): single-file
   plugin, copy one lua file into `~/.config/nvim/plugin/`.
-- **Helix** — [`editors/helix`](editors/helix/README.md): `./install.sh`.
 - **Emacs** — [`editors/emacs`](editors/emacs/README.md): single-file
   eglot integration.
 - **Sublime Text** — [`editors/sublime`](editors/sublime/README.md):
