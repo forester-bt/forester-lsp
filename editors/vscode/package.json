@@ -29,7 +29,11 @@
         "extensions": [
           ".tree"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/tree-light.svg",
+          "dark": "./icons/tree-dark.svg"
+        }
       }
     ],
     "configuration": {

@@ -1,4 +1,4 @@
-# Forester LSP — VS Code
+ Forester LSP — VS Code
 
 Thin client extension: registers the `forester` language for `.tree` files,
 starts the LSP server over stdio, and gets semantic-token highlighting,
@@ -15,10 +15,13 @@ completion, comment toggling, and bracket matching.
 From this folder:
 
 ```bash
-npm install && npm run package && 
+npm install && npm run package && code --install-extension forester-lsp-client-0.0.1.vsix
 ```
 
-This builds a `.vsix` and installs it into your regular VS Code.
+This builds the `.vsix` and installs it into your regular VS Code. If the
+`code` command isn't on your `PATH`, install the `.vsix` from the Extensions
+view instead: click the **...** menu → **Install from VSIX…** and pick the
+`forester-lsp-client-0.0.1.vsix` file.
 
 When installed from a `.vsix`, tell the extension where the server is
 (Settings → search "forester", or in `settings.json`):

@@ -1,0 +1,65 @@
+// Built-in actions.
+// The actions are accessible using the import 'import "std::actions"'
+// Better to avoid modifying the file
+
+// Fails execution, returning Result::Failure
+impl fail(reason:string);
+impl fail_empty();
+
+// Success execution, returning Result::Success
+impl success();
+
+// Running execution, returning Result::Running
+impl running();
+
+// Sleeps on duration(milliseconds) then returns Result::Success
+// impl sleep(duration:num);
+
+// Stores the value in the given key. Returns Result::Success.
+// If the cell is locked, returns Result::Failure
+impl store(key:string, value:any);
+
+// Compares a given value with what is in the cell:
+// - Returns Result::Success if they are equal
+// - Returns Fail(reason)if they are not equal
+// - Returns Fail(reason) if there is no cell in bbe with the given key.
+impl equal(key:string, expected:any);
+
+// Compares a given value with what is in the cell:
+// - Returns Result::Success if lhs is less then rhs
+// - Returns Fail(reason)if otherwise
+// - Returns Fail(reason) if there is no cell in bbe with the given key.
+impl less(lhs:num, rhs:num);
+
+// Compares given bool value with true:
+// - Returns Result::Success if they are equal
+// - Returns Fail(reason)if they are not equal
+// - Returns Fail(reason) if there is no cell in bbe with the given key.
+impl test(key:string);
+
+/// Store the current tick
+impl store_tick(name:string);
+
+/// Performs http get request
+impl http_get(url:string, bb_key:string);
+
+/// Performs http get request
+impl http_get_async(url:string, bb_key:string);
+
+// Lock key in bb
+impl lock(key:string);
+
+// Unlock key in bb
+impl unlock(key:string);
+
+// Validate the key if it is locked in bb
+impl locked(key:string);
+
+// Stop the daemon by name
+// if there is no daemon the action returns Result::Success
+// otherwise the result of the action(likely success)
+impl stop_daemon(name:string);
+
+// Check if the daemon is running
+// if there is no daemon the action returns Result::Failure otherwise Result::Success
+impl daemon_alive(name:string);
