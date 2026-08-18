@@ -1,14 +1,15 @@
 {
   "name": "forester-lsp-client",
   "displayName": "Forester Tree Language",
-  "description": "Language client for the Forester behavior tree LSP server",
+  "description": "VS Code language support for Forester, the behavior tree language",
   "version": "0.0.1",
   "publisher": "besok",
   "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
-    "url": "https://github.com/besok/forester-lsp"
+    "url": "https://github.com/forester-bt/forester-lsp.git"
   },
+  "icon": "icons/icon.png",
   "scripts": {
     "package": "npx --yes @vscode/vsce package --skip-license"
   },

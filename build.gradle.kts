@@ -48,3 +48,36 @@ sourceSets {
 tasks.test {
     useJUnitPlatform()
 }
+
+// Self-contained server jar (all dependencies bundled), runnable with `java -jar`.
+val fatJar = tasks.register<Jar>("fatJar") {
+    archiveClassifier.set("all")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes["Main-Class"] = "com.github.besok.foresterlsp.ForesterLanguageServer"
+    }
+    from(sourceSets.main.get().output)
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+    }) {
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "module-info.class")
+    }
+}
+
+// Copy the fat jar into the VS Code extension so it is bundled in the .vsix.
+val copyServer = tasks.register<Copy>("copyServer") {
+    dependsOn(fatJar)
+    from(fatJar)
+    into(layout.projectDirectory.dir("editors/vscode/server"))
+    rename { "forester-lsp.jar" }
+}
+
+// Build the .vsix, bundling the server jar (requires npm on PATH).
+tasks.register<Exec>("buildVsix") {
+    group = "distribution"
+    description = "Builds the VS Code extension (.vsix) with the server jar bundled"
+    dependsOn(copyServer)
+    workingDir = layout.projectDirectory.dir("editors/vscode").asFile
+    commandLine("npm", "run", "package")
+}

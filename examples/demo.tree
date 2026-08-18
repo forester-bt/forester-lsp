@@ -1,0 +1,8 @@
+import "std::actions"
+import "utils.tree"
+
+root main sequence {
+    success()
+    store(key = "visited", value = TRUE)
+    check_battery(threshold = 20.5)
+}

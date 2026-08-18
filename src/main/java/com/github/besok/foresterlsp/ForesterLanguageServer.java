@@ -80,6 +80,7 @@ public class ForesterLanguageServer implements LanguageServer, LanguageClientAwa
     @Override
     public void exit() {
         textDocumentService.shutdown();
+        System.exit(0);
     }
 
     @Override

@@ -10,6 +10,11 @@ function resolveServerCommand(context) {
     if (configured) {
         return configured;
     }
+    // Bundled server jar shipped inside the .vsix (requires `java` on PATH).
+    const bundled = context.asAbsolutePath(path.join('server', 'forester-lsp.jar'));
+    if (fs.existsSync(bundled)) {
+        return bundled;
+    }
     // Dev default: the extension lives in editors/vscode inside the repo, so the
     // launcher produced by `./gradlew installDist` is two levels up.
     const script = process.platform === 'win32' ? 'forester-lsp.bat' : 'forester-lsp';
