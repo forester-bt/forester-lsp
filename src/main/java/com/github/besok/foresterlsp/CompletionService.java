@@ -20,12 +20,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import com.github.besok.foresterlsp.grammar.TreeLexer;
 
-/**
- * Context-aware completion for `.tree` documents. Decides what to suggest by
- * looking at the token before the cursor; when a word is already being typed,
- * the context is taken from the token before that partial word so the list is
- * still narrowed correctly.
- */
+
 public final class CompletionService {
 
     private static final List<String> STATIC_TYPES = List.of(
@@ -46,12 +41,39 @@ public final class CompletionService {
 
         var items = new ArrayList<CompletionItem>();
 
-        // Inside the import string: suggest .tree files relative to this file.
         if (prev != null && prev.getType() == TreeLexer.STRING) {
             Token before = previousToken(tokens, prev.getStartIndex());
             if (before != null && before.getType() == TreeLexer.IMPORT) {
-                addImportPaths(items, uri, prev, text, offset);
-                return new CompletionList(items);
+                String raw = prev.getText();
+                String inner = raw.length() >= 2
+                        ? raw.substring(1, raw.length() - 1)
+                        : "";
+                Path currentDir = Path.of(URI.create(uri)).getParent();
+                Path base = currentDir.resolve(inner).normalize();
+                if (base.getParent() != null && inner.equals("")){
+                    var item = new CompletionItem("../");
+                    item.setKind(CompletionItemKind.Folder);
+                    items.add(item);
+                }
+
+                try (var stream = Files.list(base)) {
+                    for (Path entry : stream.sorted().toList()) {
+                        String name = entry.getFileName().toString();
+
+                        CompletionItem item = new CompletionItem(name);
+                        item.setFilterText(name);
+                        if (Files.isDirectory(entry)) {
+                            item.setKind(CompletionItemKind.Folder);
+                            items.add(item);
+                        } else if (name.endsWith(".tree")) {
+                            item.setKind(CompletionItemKind.File);
+                            items.add(item);
+                        }
+                    }
+                } catch (IOException e) {
+                    return new CompletionList(true, items);
+                }
+                return new CompletionList(true, items);
             }
         }
 
@@ -119,8 +141,13 @@ public final class CompletionService {
 
     private static boolean isStaticType(int type) {
         return switch (type) {
-            case TreeLexer.ROOT, TreeLexer.PARALLEL, TreeLexer.SEQUENCE, TreeLexer.MSEQUENCE,
-                    TreeLexer.RSEQUENCE, TreeLexer.FALLBACK, TreeLexer.RFALLBACK -> true;
+            case TreeLexer.ROOT,
+                 TreeLexer.PARALLEL,
+                 TreeLexer.SEQUENCE,
+                 TreeLexer.MSEQUENCE,
+                 TreeLexer.RSEQUENCE,
+                 TreeLexer.FALLBACK,
+                 TreeLexer.RFALLBACK -> true;
             default -> false;
         };
     }
@@ -141,7 +168,7 @@ public final class CompletionService {
     }
 
     private static List<ForesterDocument.Definition.Param> findParams(String name,
-            ForesterDocument document, Workspace workspace, String uri) {
+                                                                      ForesterDocument document, Workspace workspace, String uri) {
         for (ForesterDocument.Definition definition : document.getDefinitions()) {
             if (definition.name().equals(name)) {
                 return definition.params();
@@ -180,67 +207,6 @@ public final class CompletionService {
         }
     }
 
-    private static void addImportPaths(List<CompletionItem> items, String uri, Token stringToken,
-                                       String text, int offset) {
-        Path currentDir = parentDir(uri);
-        if (currentDir == null) {
-            return;
-        }
-
-        String full = stringToken.getText();
-        String content = full.length() >= 2 ? full.substring(1, full.length() - 1) : "";
-        int typed = Math.max(0, Math.min(offset - stringToken.getStartIndex() - 1, content.length()));
-        String partialPath = content.substring(0, typed);
-
-        int quoteLine = stringToken.getLine() - 1;
-        int quoteChar = stringToken.getCharPositionInLine();
-        Position startPos = new Position(quoteLine, quoteChar + 1);
-        Position endPos = new Position(quoteLine, quoteChar + 1 + typed);
-
-        String dirPart = "";
-        String nameFilter = partialPath;
-        int slash = partialPath.lastIndexOf('/');
-        if (slash >= 0) {
-            dirPart = partialPath.substring(0, slash + 1);
-            nameFilter = partialPath.substring(slash + 1);
-        }
-
-        Path base;
-        try {
-            base = currentDir.resolve(dirPart).normalize();
-        } catch (RuntimeException e) {
-            base = currentDir;
-        }
-
-        if (Files.isDirectory(base)) {
-            try (var stream = Files.list(base)) {
-                for (Path entry : stream.sorted().toList()) {
-                    String name = entry.getFileName().toString();
-                    if (!name.startsWith(nameFilter)) {
-                        continue;
-                    }
-                    if (Files.isDirectory(entry)) {
-                        items.add(pathItem(dirPart + name + "/", name, CompletionItemKind.Folder, startPos, endPos));
-                    } else if (name.endsWith(".tree")) {
-                        items.add(pathItem(dirPart + name, name, CompletionItemKind.File, startPos, endPos));
-                    }
-                }
-            } catch (IOException ignored) {
-            }
-        }
-        if (nameFilter.isEmpty()) {
-            items.add(pathItem("../", "../", CompletionItemKind.Folder, startPos, endPos));
-        }
-    }
-
-    private static Path parentDir(String uri) {
-        try {
-            Path file = Path.of(URI.create(uri));
-            return file.getParent();
-        } catch (RuntimeException e) {
-            return null;
-        }
-    }
 
     private static CompletionItem pathItem(String insert, String filterText, CompletionItemKind kind,
                                            Position startPos, Position endPos) {

@@ -1,5 +1,6 @@
 package com.github.besok.foresterlsp;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -12,13 +13,25 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
@@ -53,6 +66,7 @@ public class ForesterTextDocumentService implements TextDocumentService {
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
         String uri = params.getTextDocument().getUri();
+        workspace.invalidate(uri);
         documents.put(uri, ForesterDocument.parse(params.getTextDocument().getText()));
         publishDiagnostics(uri);
     }
@@ -64,6 +78,7 @@ public class ForesterTextDocumentService implements TextDocumentService {
             return;
         }
         String uri = params.getTextDocument().getUri();
+        workspace.invalidate(uri);
         // Full sync: the last change contains the whole document.
         documents.put(uri, ForesterDocument.parse(changes.get(changes.size() - 1).getText()));
         scheduleDiagnostics(uri);
@@ -85,6 +100,7 @@ public class ForesterTextDocumentService implements TextDocumentService {
 
     @Override
     public void didSave(DidSaveTextDocumentParams params) {
+        workspace.invalidate(params.getTextDocument().getUri());
         publishDiagnostics(params.getTextDocument().getUri());
     }
 
@@ -103,6 +119,72 @@ public class ForesterTextDocumentService implements TextDocumentService {
                 : CompletionService.complete(document, workspace, params.getTextDocument().getUri(),
                         params.getPosition().getLine(), params.getPosition().getCharacter());
         return CompletableFuture.completedFuture(Either.forRight(list));
+    }
+
+    @Override
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(DefinitionParams params) {
+        ForesterDocument document = documents.get(params.getTextDocument().getUri());
+        List<? extends Location> locations = document == null
+                ? List.of()
+                : DefinitionService.findDefinition(document, workspace, params.getTextDocument().getUri(),
+                        params.getPosition().getLine(), params.getPosition().getCharacter());
+        return CompletableFuture.completedFuture(Either.forLeft(locations));
+    }
+
+    @Override
+    public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
+        ForesterDocument document = documents.get(params.getTextDocument().getUri());
+        List<? extends Location> locations = document == null
+                ? List.of()
+                : ReferenceService.findReferences(document, workspace, params.getTextDocument().getUri(),
+                        params.getPosition().getLine(), params.getPosition().getCharacter());
+        return CompletableFuture.completedFuture(locations);
+    }
+
+    @Override
+    public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(DocumentSymbolParams params) {
+        ForesterDocument document = documents.get(params.getTextDocument().getUri());
+        if (document == null) {
+            return CompletableFuture.completedFuture(List.of());
+        }
+        List<Either<SymbolInformation, DocumentSymbol>> symbols = new ArrayList<>();
+        for (ForesterDocument.Definition definition : document.getDefinitions()) {
+            Range range = definition.fullRange();
+            Range selection = definition.nameRange();
+            if (!contains(range, selection)) {
+                range = selection;
+            }
+            var symbol = new DocumentSymbol(definition.name(), SymbolKind.Function,
+                    range, selection, definition.treeType());
+            symbols.add(Either.forRight(symbol));
+        }
+        return CompletableFuture.completedFuture(symbols);
+    }
+
+    private static boolean contains(Range outer, Range inner) {
+        return isBeforeOrEqual(outer.getStart(), inner.getStart())
+                && isBeforeOrEqual(inner.getEnd(), outer.getEnd());
+    }
+
+    private static boolean isBeforeOrEqual(Position a, Position b) {
+        if (a.getLine() != b.getLine()) {
+            return a.getLine() <= b.getLine();
+        }
+        return a.getCharacter() <= b.getCharacter();
+    }
+
+    @Override
+    public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
+        ForesterDocument document = documents.get(params.getTextDocument().getUri());
+        if (document == null) {
+            return CompletableFuture.completedFuture(List.of());
+        }
+        String text = document.getText();
+        String formatted = FormattingService.format(text);
+        String[] lines = text.split("\n", -1);
+        Position end = new Position(lines.length - 1, lines[lines.length - 1].length());
+        TextEdit edit = new TextEdit(new Range(new Position(0, 0), end), formatted);
+        return CompletableFuture.completedFuture(List.of(edit));
     }
 
     @Override

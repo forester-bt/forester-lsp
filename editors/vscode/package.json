@@ -45,6 +45,15 @@
           "description": "Path to the forester-lsp launcher script or jar. When empty, the extension uses the repository's build output (build/install/forester-lsp/bin), which is what you want during development."
         }
       }
+    },
+    "configurationDefaults": {
+      "[forester]": {
+        "editor.quickSuggestions": {
+          "other": "on",
+          "comments": "off",
+          "strings": "on"
+        }
+      }
     }
   },
   "dependencies": {

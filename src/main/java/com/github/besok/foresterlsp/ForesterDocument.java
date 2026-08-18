@@ -138,6 +138,9 @@ public final class ForesterDocument {
                 return;
             }
             String name = id.ID().getText();
+            if (name.startsWith("<missing")) {
+                return;
+            }
             String treeType = ctx.tree_type() == null ? "" : ctx.tree_type().getText();
             List<Definition.Param> params = new ArrayList<>();
             if (ctx.params() != null) {

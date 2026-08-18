@@ -53,7 +53,11 @@ public class ForesterLanguageServer implements LanguageServer, LanguageClientAwa
         }
 
         capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
-        capabilities.setCompletionProvider(new CompletionOptions(false, List.of("/")));
+        capabilities.setCompletionProvider(new CompletionOptions(false, List.of("\"", "/", ".")));
+        capabilities.setDefinitionProvider(true);
+        capabilities.setReferencesProvider(true);
+        capabilities.setDocumentSymbolProvider(true);
+        capabilities.setDocumentFormattingProvider(true);
 
         var legend = new SemanticTokensLegend(
                 SemanticTokenizer.TOKEN_TYPES, SemanticTokenizer.TOKEN_MODIFIERS);

@@ -18,7 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class Workspace {
 
-    public record ImportedDefinition(String importPath, String name, ForesterDocument.Definition definition) {
+    public record ImportedDefinition(String importPath, String name, ForesterDocument.Definition definition,
+                                     Path source) {
     }
 
     private final List<Path> roots = new ArrayList<>();
@@ -35,17 +36,18 @@ public final class Workspace {
         }
     }
 
-    public Optional<ForesterDocument> resolveImport(String importPath, String importingUri) {
+    public Optional<Path> resolveImportPath(String importPath, String importingUri) {
         for (String candidate : candidatePaths(importPath)) {
             for (Path base : candidateDirs(importingUri)) {
                 Path resolved = base.resolve(candidate).toAbsolutePath().normalize();
                 if (Files.isRegularFile(resolved)) {
-                    return Optional.of(parse(resolved));
+                    return Optional.of(resolved);
                 }
             }
         }
-        return resolveResource(importPath);
+        return Optional.empty();
     }
+
 
     public ForesterDocument parse(Path path) {
         return cache.computeIfAbsent(path.toAbsolutePath().normalize(), p -> {
@@ -57,14 +59,40 @@ public final class Workspace {
         });
     }
 
+    public void invalidate(String uri) {
+        try {
+            Path path = Path.of(URI.create(uri)).toAbsolutePath().normalize();
+            cache.remove(path);
+        } catch (RuntimeException ignored) {
+        }
+    }
+
+    public List<Path> treeFiles(String importingUri) {
+        List<Path> files = new ArrayList<>();
+        for (Path dir : candidateDirs(importingUri)) {
+            try (var stream = Files.walk(dir)) {
+                stream.filter(Files::isRegularFile)
+                        .filter(p -> p.toString().endsWith(".tree"))
+                        .map(p -> p.toAbsolutePath().normalize())
+                        .forEach(files::add);
+            } catch (IOException ignored) {
+            }
+        }
+        return files.stream().distinct().toList();
+    }
+
     public List<ImportedDefinition> importedDefinitions(ForesterDocument document, String uri) {
         var result = new ArrayList<ImportedDefinition>();
         for (ForesterDocument.Import imp : document.getImports()) {
-            resolveImport(imp.path(), uri).ifPresent(doc -> {
-                for (ForesterDocument.Definition definition : doc.getDefinitions()) {
+            Optional<Path> source = resolveImportPath(imp.path(), uri);
+            Optional<ForesterDocument> doc = source.isPresent()
+                    ? Optional.of(parse(source.get()))
+                    : resolveResource(imp.path());
+            doc.ifPresent(d -> {
+                for (ForesterDocument.Definition definition : d.getDefinitions()) {
                     String name = resolveName(imp, definition.name());
                     if (name != null) {
-                        result.add(new ImportedDefinition(imp.path(), name, definition));
+                        result.add(new ImportedDefinition(imp.path(), name, definition, source.orElse(null)));
                     }
                 }
             });
@@ -73,15 +101,12 @@ public final class Workspace {
     }
 
     private static String resolveName(ForesterDocument.Import imp, String definitionName) {
-        if (imp.aliases().isEmpty()) {
-            return definitionName;
-        }
         for (ForesterDocument.Import.Alias alias : imp.aliases()) {
             if (alias.name().equals(definitionName)) {
                 return alias.rename() != null ? alias.rename() : definitionName;
             }
         }
-        return null;
+        return definitionName;
     }
 
     private Optional<ForesterDocument> resolveResource(String importPath) {

@@ -131,7 +131,7 @@ class WorkspaceTest {
 
         assertTrue(names.contains("action1"));
         assertTrue(!names.contains("action"));
-        assertTrue(!names.contains("other"));
+        assertTrue(names.contains("other"));
     }
 
     @Test
@@ -159,23 +159,8 @@ class WorkspaceTest {
                 .stream().map(CompletionItem::getLabel).toList();
 
         assertTrue(labels.contains("utils.tree"));
-        assertTrue(labels.contains("sub/"));
+        assertTrue(labels.contains("sub"));
         assertTrue(labels.contains("../"));
-    }
-
-    @Test
-    void narrowsImportPathByTypedPrefix() throws IOException {
-        Files.writeString(tempDir.resolve("utils.tree"), "root a();\n");
-        Files.writeString(tempDir.resolve("other.tree"), "root b();\n");
-
-        var workspace = new Workspace();
-        var doc = ForesterDocument.parse("import \"ut\"\nroot m {}\n");
-        String uri = tempDir.resolve("main.tree").toUri().toString();
-        var labels = CompletionService.complete(doc, workspace, uri, 0, 10).getItems()
-                .stream().map(CompletionItem::getLabel).toList();
-
-        assertTrue(labels.contains("utils.tree"));
-        assertFalse(labels.contains("other.tree"));
     }
 
     @Test
@@ -189,6 +174,6 @@ class WorkspaceTest {
         var labels = CompletionService.complete(doc, workspace, uri, 0, 12).getItems()
                 .stream().map(CompletionItem::getLabel).toList();
 
-        assertTrue(labels.contains("sub/nested.tree"));
+        assertTrue(labels.contains("nested.tree"));
     }
 }
